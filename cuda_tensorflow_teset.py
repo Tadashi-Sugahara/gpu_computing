@@ -28,7 +28,7 @@ def check_gpu_availability():
     
     # CUDAとcuDNNのサポート確認
     print(f"\nCUDAサポート: {tf.test.is_built_with_cuda()}")
-    print(f"GPU利用可能: {tf.test.is_gpu_available(cuda_only=False) if hasattr(tf.test, 'is_gpu_available') else 'N/A (TF 2.x)'}")
+    print(f"GPU利用可能: {len(gpus) > 0}")
 
 def compare_cpu_gpu_matrix_multiplication():
     """CPU vs GPU 行列乗算の比較"""
@@ -130,7 +130,8 @@ def test_training_step():
     
     # 簡単なモデルを作成
     model = tf.keras.Sequential([
-        tf.keras.layers.Dense(512, activation='relu', input_shape=(784,)),
+        tf.keras.layers.Input(shape=(784,)),
+        tf.keras.layers.Dense(512, activation='relu'),
         tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Dense(256, activation='relu'),
         tf.keras.layers.Dropout(0.2),
