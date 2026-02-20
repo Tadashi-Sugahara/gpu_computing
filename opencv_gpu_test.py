@@ -1,5 +1,67 @@
 # OpenCV GPU vs CPU パフォーマンス比較スクリプト (Webカメラ対応 + CuPy)
 
+import os
+import site
+import sys
+
+
+def _collect_nvidia_lib_dirs():
+    lib_dirs = []
+    site_roots = []
+
+    try:
+        site_roots.extend(site.getsitepackages())
+    except Exception:
+        pass
+
+    user_site = site.getusersitepackages()
+    if user_site:
+        site_roots.append(user_site)
+
+    nvidia_lib_relpaths = [
+        "nvidia/npp/lib",
+        "nvidia/cuda_runtime/lib",
+        "nvidia/cublas/lib",
+        "nvidia/cufft/lib",
+        "nvidia/curand/lib",
+        "nvidia/cusolver/lib",
+        "nvidia/cusparse/lib",
+        "nvidia/nvjitlink/lib",
+    ]
+
+    for root in site_roots:
+        for relpath in nvidia_lib_relpaths:
+            path = os.path.join(root, relpath)
+            if os.path.isdir(path):
+                lib_dirs.append(path)
+
+    seen = set()
+    deduped = []
+    for path in lib_dirs:
+        if path not in seen:
+            seen.add(path)
+            deduped.append(path)
+    return deduped
+
+
+def _bootstrap_ld_library_path_once():
+    if os.environ.get("_CUDA_LIBPATH_BOOTSTRAPPED") == "1":
+        return
+
+    nvidia_lib_dirs = _collect_nvidia_lib_dirs()
+    if not nvidia_lib_dirs:
+        return
+
+    current = os.environ.get("LD_LIBRARY_PATH", "")
+    merged = ":".join(nvidia_lib_dirs + ([current] if current else []))
+
+    os.environ["LD_LIBRARY_PATH"] = merged
+    os.environ["_CUDA_LIBPATH_BOOTSTRAPPED"] = "1"
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+_bootstrap_ld_library_path_once()
+
 import cv2
 import numpy as np
 import cupy as cp
