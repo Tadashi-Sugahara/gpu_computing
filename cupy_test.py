@@ -9,7 +9,7 @@ def compare_array_operations():
     print("配列の基本操作の比較")
     print("=" * 50)
     
-    size = 10000000  # 1000万要素
+    size = 80000000  # 1000万要素
     
     # Numpy配列の作成と操作
     print("\n[NumPy]")
